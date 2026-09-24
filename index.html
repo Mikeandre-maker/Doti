@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DOTI — Waste to Value</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#f3f7f4;color:#17352a}
+.app{max-width:430px;margin:auto;min-height:100vh;background:#fff;box-shadow:0 0 30px #0001}
+header{background:linear-gradient(135deg,#0b6b45,#19a463);color:white;padding:24px 20px 20px;border-radius:0 0 24px 24px}
+.logo{font-size:28px;font-weight:900;letter-spacing:2px}.tag{opacity:.9;font-size:13px;margin-top:3px}
+.balance{margin-top:20px;background:#ffffff18;border:1px solid #ffffff30;border-radius:18px;padding:16px}
+.balance b{font-size:30px}.small{font-size:12px;opacity:.8}
+main{padding:18px 18px 90px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{border:1px solid #e3ebe6;border-radius:16px;padding:15px;background:#fff}.action{cursor:pointer;transition:.15s}.action:active{transform:scale(.98)}
+.icon{font-size:27px}.card h3{margin:8px 0 4px;font-size:15px}.card p{margin:0;color:#708078;font-size:12px}
+.section{margin-top:22px}.section h2{font-size:17px;margin:0 0 10px}
+.progress{height:9px;background:#e7eee9;border-radius:99px;overflow:hidden}.bar{height:100%;background:#16a064;width:68%}
+.row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #edf1ee;font-size:13px}
+.badge{padding:5px 8px;border-radius:20px;background:#e9f7ef;color:#087044;font-size:11px;font-weight:700}
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(430px,100%);display:flex;background:#fff;border-top:1px solid #e3ebe6;justify-content:space-around;padding:10px 5px 9px}
+nav button{border:0;background:none;color:#738078;font-size:11px}.active{color:#087044!important;font-weight:800}
+.modal{display:none;position:fixed;inset:0;background:#0008;align-items:end;justify-content:center}.sheet{background:white;width:min(430px,100%);border-radius:24px 24px 0 0;padding:22px;max-height:85vh;overflow:auto}
+input,select{width:100%;padding:13px;border:1px solid #dce6df;border-radius:12px;margin:7px 0 14px;font-size:14px}
+button.primary{width:100%;padding:14px;border:0;border-radius:13px;background:#0b6b45;color:white;font-weight:800;font-size:14px}
+.close{float:right;border:0;background:#eef4f0;border-radius:50%;width:30px;height:30px}
+.toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);background:#17352a;color:white;padding:12px 18px;border-radius:12px;display:none;font-size:13px;z-index:10}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="logo">DOTI</div><div class="tag">Waste to value. Value to life.</div>
+  <div class="balance"><div class="small">Available Doti Points</div><b id="points">1,280</b> pts</div>
+</header>
+<main id="home">
+  <div class="grid">
+    <div class="card action" onclick="openModal('pickup')"><div class="icon">🚛</div><h3>Request pickup</h3><p>Schedule or request instant collection</p></div>
+    <div class="card action" onclick="openModal('sort')"><div class="icon">♻️</div><h3>Record waste</h3><p>Log sorted materials and earn points</p></div>
+    <div class="card action" onclick="openModal('utility')"><div class="icon">💡</div><h3>Pay utilities</h3><p>Use Doti Points for bills</p></div>
+    <div class="card action" onclick="openModal('wallet')"><div class="icon">💰</div><h3>My wallet</h3><p>Track points and transactions</p></div>
+  </div>
+
+  <div class="section">
+    <h2>Monthly impact</h2>
+    <div class="card">
+      <div class="row"><span>Waste diverted</span><b>46.5 kg</b></div>
+      <div class="row"><span>Points earned</span><b>+1,280</b></div>
+      <div class="row"><span>Collection target</span><b>68%</b></div>
+      <div class="progress"><div class="bar"></div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Recent activity</h2>
+    <div class="card">
+      <div class="row"><span>♻️ Plastic — 8 kg</span><span class="badge">+320 pts</span></div>
+      <div class="row"><span>🚛 Pickup completed</span><span class="badge">+150 pts</span></div>
+      <div class="row"><span>💡 Electricity bill</span><span class="badge">−500 pts</span></div>
+    </div>
+  </div>
+</main>
+
+<nav>
+<button class="active" onclick="goHome()">⌂<br>Home</button>
+<button onclick="openModal('pickup')">🚛<br>Pickup</button>
+<button onclick="openModal('sort')">♻️<br>Waste</button>
+<button onclick="openModal('utility')">💳<br>Pay</button>
+<button onclick="openModal('wallet')">👤<br>Account</button>
+</nav>
+</div>
+
+<div class="modal" id="modal"><div class="sheet">
+<button class="close" onclick="closeModal()">×</button><div id="modalBody"></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+let pts=1280;
+const modal=document.getElementById('modal'), body=document.getElementById('modalBody');
+function openModal(type){
+let t='';
+if(type==='pickup') t=`<h2>Request waste pickup</h2><p>Choose how DOTI should collect your sorted waste.</p>
+<select id="pickupType"><option>Instant pickup</option><option>Schedule pickup</option></select>
+<input id="address" placeholder="Pickup location / area">
+<select id="material"><option>Mixed recyclables</option><option>Plastic</option><option>Aluminium cans</option><option>Glass</option><option>Organic waste</option></select>
+<button class="primary" onclick="submitPickup()">Request collection</button>`;
+if(type==='sort') t=`<h2>Record sorted waste</h2><p>Enter the material and quantity collected.</p>
+<select id="waste"><option value="4">Plastic</option><option value="3">Aluminium cans</option><option value="2">Glass</option><option value="1">Organic waste</option></select>
+<input id="kg" type="number" min="0.1" placeholder="Quantity in kg">
+<button class="primary" onclick="recordWaste()">Calculate & earn points</button>`;
+if(type==='utility') t=`<h2>Pay a utility bill</h2><p>Your Doti Points can be used toward supported utility services.</p>
+<select id="utility"><option>Electricity</option><option>Water</option><option>Internet</option><option>Mobile airtime</option></select>
+<input id="amount" type="number" placeholder="Points to use">
+<button class="primary" onclick="payBill()">Pay with Doti Points</button>`;
+if(type==='wallet') t=`<h2>My Doti wallet</h2><div class="card"><div class="small">Available balance</div><h1>${pts.toLocaleString()} pts</h1><p>1,000 pts = configurable utility value in the pilot.</p></div><div class="section"><h3>How it works</h3><p>Sort waste → record/collect → earn points → redeem for supported services.</p></div>`;
+body.innerHTML=t; modal.style.display='flex';
+}
+function closeModal(){modal.style.display='none'}
+function toast(s){let x=document.getElementById('toast');x.textContent=s;x.style.display='block';setTimeout(()=>x.style.display='none',2400)}
+function submitPickup(){closeModal();toast('Pickup request created. A collector can be assigned next.')}
+function recordWaste(){let kg=parseFloat(document.getElementById('kg').value||0), rate=parseInt(document.getElementById('waste').value);if(kg<=0){toast('Enter a valid quantity');return}let earned=Math.round(kg*rate*10);pts+=earned;document.getElementById('points').textContent=pts.toLocaleString();closeModal();toast(`Recorded ${kg} kg. +${earned} Doti Points`)}
+function payBill(){let a=parseInt(document.getElementById('amount').value||0);if(a<=0||a>pts){toast('Enter an amount within your balance');return}pts-=a;document.getElementById('points').textContent=pts.toLocaleString();closeModal();toast(`Payment submitted: −${a} Doti Points`)}
+function goHome(){window.scrollTo({top:0,behavior:'smooth'})}
+</script>
+</body></html>
